@@ -19,6 +19,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.leo.simplearcloader.ArcConfiguration;
 import com.leo.simplearcloader.SimpleArcDialog;
 
@@ -88,9 +90,12 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         init();
+
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                email = emailE.getText().toString();
+                pass = passE.getText().toString();
                 if (TextUtils.isEmpty(email) || TextUtils.isEmpty(pass) || TextUtils.isEmpty(baseCountE.getText().toString())) {
                     Toast.makeText(MainActivity.this, "请输入邮箱和密码！", Toast.LENGTH_LONG).show();
                     return;
@@ -104,7 +109,8 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferencesHelper.putString(MainActivity.this, "japan", "" + japan.isChecked());
                 SharedPreferencesHelper.putString(MainActivity.this, "usa", "" + usa.isChecked());
 
-                getNodes();
+
+                getUserInfo(false);
             }
         });
 
@@ -128,10 +134,12 @@ public class MainActivity extends AppCompatActivity {
         japan.setChecked(Boolean.parseBoolean(SharedPreferencesHelper.getString(MainActivity.this, "japan", "false")));
         usa.setChecked(Boolean.parseBoolean(SharedPreferencesHelper.getString(MainActivity.this, "usa", "false")));
 
-        getNodes();
+        getUserInfo(true);
     }
 
-    private void checkIn() {
+    private void login() {
+        email = emailE.getText().toString();
+        pass = passE.getText().toString();
         OkHttpClient okHttpClient = new OkHttpClient();
         RequestBody phone = new FormBody.Builder()
                 .add("email", email)
@@ -148,25 +156,95 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(final Call call, Response response) throws IOException {
                 final String string = response.body().string();
-                List<String> cookies = response.headers("set-cookie");
-                cookieStr = "";
-                for (String c : cookies) {
-                    cookieStr += c.substring(0, c.indexOf(";") + 1);
-                }
-                Log.e("---", cookieStr);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this, "登陆成功", Toast.LENGTH_LONG).show();
-                        SharedPreferencesHelper.putString(MainActivity.this, "cookieStr", cookieStr);
-                        getNodes();
+                Log.e("RES", string);
+                Gson gson = new Gson();
+                final Map<String, String> map = gson.fromJson(string, new TypeToken<Map<String, String>>() {
+                }.getType());
+                if ("1".equals(map.get("ret"))) {
+                    List<String> cookies = response.headers("set-cookie");
+                    cookieStr = "";
+                    for (String c : cookies) {
+                        cookieStr += c.substring(0, c.indexOf(";") + 1);
                     }
-                });
+                    Log.e("---", cookieStr);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "登陆成功", Toast.LENGTH_LONG).show();
+                            SharedPreferencesHelper.putString(MainActivity.this, "cookieStr", cookieStr);
+                            getUserInfo(true);
+                        }
+                    });
+                } else {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, map.get("msg"), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
             }
         });
     }
 
-    private void getUserInfo() {
+    private void tryCheckIn() {
+        OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        final Request original = chain.request();
+
+                        final Request authorized = original.newBuilder()
+                                .addHeader("Cookie", cookieStr)
+                                .build();
+                        return chain.proceed(authorized);
+                    }
+                })
+                .build();
+
+        RequestBody phone = new FormBody.Builder().build();
+        Request build = new Request.Builder()
+                .url(URL + "user/checkin").post(phone).build();
+        Call call = okHttpClient.newCall(build);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+            }
+
+            @Override
+            public void onResponse(final Call call, final Response response) throws IOException {
+                final String string = response.body().string();
+                if (!string.contains("DOCTYPE")) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Gson gson = new Gson();
+                            Map<String, String> map = gson.fromJson(string, new TypeToken<Map<String, String>>() {
+                            }.getType());
+                            if ("1".equals(map.get("ret"))) {
+                                Toast.makeText(MainActivity.this, map.get("msg"), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void getUserInfo(final boolean start) {
+        email = emailE.getText().toString();
+        pass = passE.getText().toString();
+
+        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(pass) || TextUtils.isEmpty(baseCountE.getText().toString())) {
+            Toast.makeText(MainActivity.this, "请输入邮箱和密码！", Toast.LENGTH_LONG).show();
+            return;
+        }
+        baseCount = Integer.parseInt(baseCountE.getText().toString());
+
+
+        mDialog = new SimpleArcDialog(MainActivity.this);
+        mDialog.setConfiguration(new ArcConfiguration(MainActivity.this));
+        mDialog.show();
 
         OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                 .addInterceptor(new Interceptor() {
@@ -182,46 +260,46 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .build();
 
-
         Request build = new Request.Builder().url(URL + "user").get().build();
         Call call = okHttpClient.newCall(build);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-
             }
 
             @Override
             public void onResponse(final Call call, Response response) throws IOException {
                 final String string = response.body().string();
 
-                if (!string.contains("legendText:\"已用")) {
-                    return;
-                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (string.contains("未登录")) {
+                            Toast.makeText(MainActivity.this, "登录失效，尝试登录", Toast.LENGTH_LONG).show();
+                            login();
+                            mDialog.dismiss();
+                            return;
+                        }
 
-                used = string.substring(string.indexOf("legendText:\"已用") + 12, string.indexOf("\",", string.indexOf("legendText:\"已用")));
-                today = string.substring(string.indexOf("legendText:\"今日") + 12, string.indexOf("\",", string.indexOf("legendText:\"今日")));
-                remain = string.substring(string.indexOf("legendText:\"剩余") + 12, string.indexOf("\",", string.indexOf("legendText:\"剩余")));
+                        if (!string.contains("legendText:\"已用")) {
+                            return;
+                        }
+
+                        used = string.substring(string.indexOf("legendText:\"已用") + 12, string.indexOf("\",", string.indexOf("legendText:\"已用")));
+                        today = string.substring(string.indexOf("legendText:\"今日") + 12, string.indexOf("\",", string.indexOf("legendText:\"今日")));
+                        remain = string.substring(string.indexOf("legendText:\"剩余") + 12, string.indexOf("\",", string.indexOf("legendText:\"剩余")));
+
+                        getNodes();
+                        if (start) {
+                            tryCheckIn();
+                        }
+                    }
+                });
             }
         });
     }
 
     private void getNodes() {
-        email = emailE.getText().toString();
-        pass = passE.getText().toString();
-
-        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(pass) || TextUtils.isEmpty(baseCountE.getText().toString())) {
-            Toast.makeText(MainActivity.this, "请输入邮箱和密码！", Toast.LENGTH_LONG).show();
-            return;
-        }
-        baseCount = Integer.parseInt(baseCountE.getText().toString());
-
-        mDialog = new SimpleArcDialog(MainActivity.this);
-        mDialog.setConfiguration(new ArcConfiguration(MainActivity.this));
-        mDialog.show();
-
-        getUserInfo();
-
         OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                 .addInterceptor(new Interceptor() {
                     @Override
@@ -253,10 +331,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
-
                             if (string.contains("未登录")) {
                                 Toast.makeText(MainActivity.this, "登录失效，尝试登录", Toast.LENGTH_LONG).show();
-                                checkIn();
+                                mDialog.dismiss();
                                 return;
                             }
 
@@ -332,7 +409,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
-
             }
         });
     }

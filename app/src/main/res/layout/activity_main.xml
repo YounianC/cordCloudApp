@@ -79,7 +79,7 @@
                 android:id="@+id/hongkong"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="港.台"
+                android:text="港台"
                 android:textColor="#FF333333"/>
 
             <CheckBox

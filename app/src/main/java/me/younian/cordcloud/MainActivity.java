@@ -81,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.usa)
     CheckBox usa;
 
+    @BindView(R.id.ifCheckIn)
+    TextView ifCheckIn;
+
     private SimpleArcDialog mDialog;
 
     @Override
@@ -120,6 +123,13 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "当前版本:" + getVersionName(MainActivity.this)
                         + "  by Younian", Toast.LENGTH_LONG).show();
                 return false;
+            }
+        });
+
+        ifCheckIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tryCheckIn();
             }
         });
     }
@@ -223,6 +233,11 @@ public class MainActivity extends AppCompatActivity {
                             }.getType());
                             if ("1".equals(map.get("ret"))) {
                                 Toast.makeText(MainActivity.this, map.get("msg"), Toast.LENGTH_LONG).show();
+                                if (map.get("msg").contains("您似乎已经续命过了")) {
+                                    ifCheckIn.setText("已经续命");
+                                } else {
+                                    ifCheckIn.setText("未续命");
+                                }
                             }
                         }
                     });

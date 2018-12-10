@@ -99,15 +99,6 @@
                    android:text="美国"
                    android:textColor="#FF333333"/>
            </LinearLayout>
-
-           <TextView
-               android:id="@+id/ifCheckIn"
-               android:layout_marginRight="6dp"
-               android:layout_alignParentEnd="true"
-               android:layout_centerVertical="true"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:text="未续命"/>
        </RelativeLayout>
 
 

@@ -1,6 +1,7 @@
 package me.younian.cordcloud;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -12,6 +13,7 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -60,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private List<Map<String, String>> nodeList = new ArrayList<>();
+    private NodeAdapter nodeAdapter = null;
 
     String cookieStr = "";
     @BindView(R.id.login)
@@ -81,9 +84,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.usa)
     CheckBox usa;
 
-    @BindView(R.id.ifCheckIn)
-    TextView ifCheckIn;
-
+    boolean ifCheckIn = false;
     private SimpleArcDialog mDialog;
 
     @Override
@@ -126,10 +127,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ifCheckIn.setOnClickListener(new View.OnClickListener() {
+        nodes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View v) {
-                tryCheckIn();
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if (i == 0) {
+                    tryCheckIn();
+                }
             }
         });
     }
@@ -143,6 +146,9 @@ public class MainActivity extends AppCompatActivity {
         hongkong.setChecked(Boolean.parseBoolean(SharedPreferencesHelper.getString(MainActivity.this, "hongkong", "false")));
         japan.setChecked(Boolean.parseBoolean(SharedPreferencesHelper.getString(MainActivity.this, "japan", "false")));
         usa.setChecked(Boolean.parseBoolean(SharedPreferencesHelper.getString(MainActivity.this, "usa", "false")));
+
+        mDialog = new SimpleArcDialog(MainActivity.this);
+        mDialog.setConfiguration(new ArcConfiguration(MainActivity.this));
 
         getUserInfo(true);
     }
@@ -198,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void tryCheckIn() {
+        mDialog.show();
         OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                 .addInterceptor(new Interceptor() {
                     @Override
@@ -233,15 +240,22 @@ public class MainActivity extends AppCompatActivity {
                             }.getType());
                             if ("1".equals(map.get("ret"))) {
                                 Toast.makeText(MainActivity.this, map.get("msg"), Toast.LENGTH_LONG).show();
+
                                 if (map.get("msg").contains("您似乎已经续命过了")) {
-                                    ifCheckIn.setText("已经续命");
+                                    ifCheckIn = true;
+                                    nodeList.get(0).put("checkin", "签到:已续命");
                                 } else {
-                                    ifCheckIn.setText("未续命");
+                                    ifCheckIn = false;
+                                    nodeList.get(0).put("checkin", "签到:未续命(点击续命)");
+                                }
+                                if (nodeAdapter != null) {
+                                    nodeAdapter.notifyDataSetChanged();
                                 }
                             }
                         }
                     });
                 }
+                mDialog.dismiss();
             }
         });
     }
@@ -256,11 +270,7 @@ public class MainActivity extends AppCompatActivity {
         }
         baseCount = Integer.parseInt(baseCountE.getText().toString());
 
-
-        mDialog = new SimpleArcDialog(MainActivity.this);
-        mDialog.setConfiguration(new ArcConfiguration(MainActivity.this));
         mDialog.show();
-
         OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                 .addInterceptor(new Interceptor() {
                     @Override
@@ -304,17 +314,14 @@ public class MainActivity extends AppCompatActivity {
                         today = string.substring(string.indexOf("legendText:\"今日") + 12, string.indexOf("\",", string.indexOf("legendText:\"今日")));
                         remain = string.substring(string.indexOf("legendText:\"剩余") + 12, string.indexOf("\",", string.indexOf("legendText:\"剩余")));
 
-                        getNodes();
-                        if (start) {
-                            tryCheckIn();
-                        }
+                        getNodes(start);
                     }
                 });
             }
         });
     }
 
-    private void getNodes() {
+    private void getNodes(final boolean start) {
         OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                 .addInterceptor(new Interceptor() {
                     @Override
@@ -413,9 +420,14 @@ public class MainActivity extends AppCompatActivity {
                             map.put("remain", remain);
                             map.put("used", used);
                             map.put("today", today);
+                            map.put("checkin", ifCheckIn ? "签到:已续命" : "签到:未续命(点击续命)");
                             nodeList.add(0, map);
 
-                            NodeAdapter nodeAdapter = new NodeAdapter(MainActivity.this, nodeList);
+                            if (start) {
+                                tryCheckIn();
+                            }
+
+                            nodeAdapter = new NodeAdapter(MainActivity.this, nodeList);
                             nodes.setAdapter(nodeAdapter);
                             nodeAdapter.notifyDataSetChanged();
                             mDialog.dismiss();

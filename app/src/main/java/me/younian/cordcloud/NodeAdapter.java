@@ -65,20 +65,16 @@ public class NodeAdapter extends BaseAdapter {
             viewHolder.remain.setText("" + dataBeans.get(position).get("used"));
             int allCount = (dataBeans.size() - 1);
             viewHolder.status.setText("节点数：" + (allCount - errorCount) + "/" + allCount);
+            viewHolder.beilv.setText("" + dataBeans.get(position).get("checkin"));
 
             viewHolder.nodeName.setTextColor(Color.parseColor("#000000"));
             viewHolder.person.setTextColor(Color.parseColor("#000000"));
             viewHolder.remain.setTextColor(Color.parseColor("#000000"));
             viewHolder.status.setTextColor(Color.parseColor("#000000"));
-
-            viewHolder.beilv.setVisibility(View.GONE);
-
+            viewHolder.beilv.setTextColor(Color.parseColor("#000000"));
             viewHolder.item.setBackgroundColor(Color.parseColor("#5997f9"));
             return view;
         }
-
-        viewHolder.beilv.setVisibility(View.VISIBLE);
-
         int personInt = Integer.parseInt(dataBeans.get(position).get("person"));
 
         viewHolder.nodeName.setText("" + dataBeans.get(position).get("nodeName"));

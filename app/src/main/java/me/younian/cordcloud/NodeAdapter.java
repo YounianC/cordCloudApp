@@ -72,7 +72,7 @@ public class NodeAdapter extends BaseAdapter {
             viewHolder.remain.setTextColor(Color.parseColor("#000000"));
             viewHolder.status.setTextColor(Color.parseColor("#000000"));
             viewHolder.beilv.setTextColor(Color.parseColor("#000000"));
-            viewHolder.item.setBackgroundColor(Color.parseColor("#5997f9"));
+            viewHolder.item.setBackgroundColor(Color.parseColor("#008577"));
             return view;
         }
         int personInt = Integer.parseInt(dataBeans.get(position).get("person"));
@@ -98,7 +98,7 @@ public class NodeAdapter extends BaseAdapter {
         }
 
         if (dataBeans.get(position).get("error").equals("1")) {
-            viewHolder.item.setBackgroundColor(Color.parseColor("#FFDDDDDD"));
+            viewHolder.item.setBackgroundColor(Color.parseColor("#b3cccc"));
         } else {
             viewHolder.item.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
         }

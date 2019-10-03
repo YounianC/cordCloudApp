@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/layout_filter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="6dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="过滤："
+                android:textColor="#FF333333" />
+
+            <CheckBox
+                android:id="@+id/hongkong"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="港台"
+                android:textColor="#FF333333" />
+
+            <CheckBox
+                android:id="@+id/japan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="日本"
+                android:textColor="#FF333333" />
+
+            <CheckBox
+                android:id="@+id/usa"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="美国"
+                android:textColor="#FF333333" />
+        </LinearLayout>
+
+        <ListView
+            android:layout_below="@id/layout_filter"
+            android:id="@+id/nodes"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="#F2F2F2"
+            android:dividerHeight="5dp"></ListView>
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>

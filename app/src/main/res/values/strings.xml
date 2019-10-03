@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">CordCloud</string>
+    <string name="app_name">cordCloud</string>
+    <string name="action_settings">设置</string>
+    <string name="action_info">关于</string>
 </resources>

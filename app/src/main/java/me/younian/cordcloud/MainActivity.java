@@ -5,20 +5,18 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -50,7 +48,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
-    private String URL = "https://www.cordcloud.cc/";
+
+    private String host;
 
     private String email = "";
     private String pass = "";
@@ -60,22 +59,15 @@ public class MainActivity extends AppCompatActivity {
     private String used;
     private String today;
 
-
+    String cookieStr = "";
     private List<Map<String, String>> nodeList = new ArrayList<>();
     private NodeAdapter nodeAdapter = null;
 
-    String cookieStr = "";
-    @BindView(R.id.login)
-    Button login;
+    boolean ifCheckIn = false;
+    private SimpleArcDialog mDialog;
+
     @BindView(R.id.nodes)
     ListView nodes;
-
-    @BindView(R.id.email)
-    EditText emailE;
-    @BindView(R.id.pass)
-    EditText passE;
-    @BindView(R.id.baseCount)
-    EditText baseCountE;
 
     @BindView(R.id.hongkong)
     CheckBox hongkong;
@@ -84,63 +76,29 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.usa)
     CheckBox usa;
 
-    boolean ifCheckIn = false;
-    private SimpleArcDialog mDialog;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        init();
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        login.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                email = emailE.getText().toString();
-                pass = passE.getText().toString();
-                if (TextUtils.isEmpty(email) || TextUtils.isEmpty(pass) || TextUtils.isEmpty(baseCountE.getText().toString())) {
-                    Toast.makeText(MainActivity.this, "请输入邮箱和密码！", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                baseCount = Integer.parseInt(baseCountE.getText().toString());
-                SharedPreferencesHelper.putString(MainActivity.this, "email", email);
-                SharedPreferencesHelper.putString(MainActivity.this, "pass", pass);
-                SharedPreferencesHelper.putString(MainActivity.this, "baseCount", "" + baseCount);
-
-                SharedPreferencesHelper.putString(MainActivity.this, "hongkong", "" + hongkong.isChecked());
-                SharedPreferencesHelper.putString(MainActivity.this, "japan", "" + japan.isChecked());
-                SharedPreferencesHelper.putString(MainActivity.this, "usa", "" + usa.isChecked());
-
-
+                /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();*/
                 getUserInfo(false);
             }
         });
 
-        login.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                Toast.makeText(MainActivity.this, "当前版本:" + getVersionName(MainActivity.this)
-                        + "  by Younian", Toast.LENGTH_LONG).show();
-                return false;
-            }
-        });
-
-        nodes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (i == 0) {
-                    tryCheckIn();
-                }
-            }
-        });
+        init();
     }
 
     private void init() {
-        emailE.setText(SharedPreferencesHelper.getString(MainActivity.this, "email", ""));
-        passE.setText(SharedPreferencesHelper.getString(MainActivity.this, "pass", ""));
-        baseCountE.setText(SharedPreferencesHelper.getString(MainActivity.this, "baseCount", "20"));
         cookieStr = (SharedPreferencesHelper.getString(MainActivity.this, "cookieStr", ""));
 
         hongkong.setChecked(Boolean.parseBoolean(SharedPreferencesHelper.getString(MainActivity.this, "hongkong", "false")));
@@ -153,16 +111,51 @@ public class MainActivity extends AppCompatActivity {
         getUserInfo(true);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent();
+            intent.setClass(this, SettingActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (id == R.id.action_info) {
+            Toast.makeText(MainActivity.this, "当前版本" +  getVersionName(this), Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SharedPreferencesHelper.putString(MainActivity.this, "hongkong", "" + hongkong.isChecked());
+        SharedPreferencesHelper.putString(MainActivity.this, "japan", "" + japan.isChecked());
+        SharedPreferencesHelper.putString(MainActivity.this, "usa", "" + usa.isChecked());
+    }
+
     private void login() {
-        email = emailE.getText().toString();
-        pass = passE.getText().toString();
+        refreshSettings();
         OkHttpClient okHttpClient = new OkHttpClient();
         RequestBody phone = new FormBody.Builder()
                 .add("email", email)
                 .add("passwd", pass)
                 .build();
         Request build = new Request.Builder()
-                .url(URL + "auth/login").post(phone).build();
+                .url(host + "/auth/login").post(phone).build();
         Call call = okHttpClient.newCall(build);
         call.enqueue(new Callback() {
             @Override
@@ -221,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
         RequestBody phone = new FormBody.Builder().build();
         Request build = new Request.Builder()
-                .url(URL + "user/checkin").post(phone).build();
+                .url(host + "/user/checkin").post(phone).build();
         Call call = okHttpClient.newCall(build);
         call.enqueue(new Callback() {
             @Override
@@ -260,16 +253,19 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void getUserInfo(final boolean start) {
-        email = emailE.getText().toString();
-        pass = passE.getText().toString();
+    private void refreshSettings() {
+        host = SharedPreferencesHelper.getString(MainActivity.this, "host", "");
+        email = SharedPreferencesHelper.getString(MainActivity.this, "email", "");
+        pass = SharedPreferencesHelper.getString(MainActivity.this, "pass", "");
+        baseCount = Integer.parseInt(SharedPreferencesHelper.getString(MainActivity.this, "baseCount", "20"));
+    }
 
-        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(pass) || TextUtils.isEmpty(baseCountE.getText().toString())) {
+    private void getUserInfo(final boolean start) {
+        refreshSettings();
+        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(pass)) {
             Toast.makeText(MainActivity.this, "请输入邮箱和密码！", Toast.LENGTH_LONG).show();
             return;
         }
-        baseCount = Integer.parseInt(baseCountE.getText().toString());
-
         mDialog.show();
         OkHttpClient okHttpClient = new OkHttpClient().newBuilder()
                 .addInterceptor(new Interceptor() {
@@ -285,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .build();
 
-        Request build = new Request.Builder().url(URL + "user").get().build();
+        Request build = new Request.Builder().url(host + "/user").get().build();
         Call call = okHttpClient.newCall(build);
         call.enqueue(new Callback() {
             @Override
@@ -337,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
 
-        Request build = new Request.Builder().url(URL + "user/node").get().build();
+        Request build = new Request.Builder().url(host + "/user/node").get().build();
         Call call = okHttpClient.newCall(build);
         call.enqueue(new Callback() {
             @Override

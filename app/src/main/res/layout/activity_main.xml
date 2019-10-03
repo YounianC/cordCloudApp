@@ -1,125 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
 
-       <LinearLayout
-           android:layout_marginLeft="6dp"
-           android:layout_marginRight="6dp"
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content">
-
-           <LinearLayout
-               android:id="@+id/con"
-               android:orientation="vertical"
-               android:layout_weight="8"
-               android:layout_height="match_parent"
-               android:layout_width="0dp">
-               <EditText
-                   android:id="@+id/email"
-                   android:hint="请输入邮箱"
-                   android:gravity="center"
-                   android:layout_width="match_parent"
-                   android:layout_height="wrap_content" />
-               <EditText
-                   android:id="@+id/pass"
-                   android:inputType="textPassword"
-                   android:hint="请输入密码"
-                   android:gravity="center"
-                   android:layout_width="match_parent"
-                   android:layout_height="wrap_content" />
-           </LinearLayout>
-
-           <LinearLayout
-               android:layout_weight="3"
-               android:orientation="vertical"
-               android:layout_height="match_parent"
-               android:layout_width="0dp">
-               <EditText
-                   android:id="@+id/baseCount"
-                   android:hint="报警基准"
-                   android:inputType="number"
-                   android:gravity="center"
-                   android:text="20"
-                   android:layout_width="match_parent"
-                   android:layout_height="wrap_content" />
-               <Button
-                   android:id="@+id/login"
-                   android:layout_width="match_parent"
-                   android:layout_height="match_parent"
-                   android:text="获取"/>
-           </LinearLayout>
-
-
-       </LinearLayout>
-
-       <RelativeLayout
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content">
-
-           <LinearLayout
-               android:layout_marginLeft="6dp"
-               android:orientation="horizontal"
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content">
-
-               <TextView
-                   android:text="过滤："
-                   android:textColor="#FF333333"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content" />
-
-               <CheckBox
-                   android:id="@+id/hongkong"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:text="港台"
-                   android:textColor="#FF333333"/>
-
-               <CheckBox
-                   android:id="@+id/japan"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:text="日本"
-                   android:textColor="#FF333333"/>
-
-               <CheckBox
-                   android:id="@+id/usa"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:text="美国"
-                   android:textColor="#FF333333"/>
-           </LinearLayout>
-       </RelativeLayout>
-
-
-        <ListView
-            android:id="@+id/nodes"
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:divider="#F2F2F2"
-            android:dividerHeight="5dp"
-            android:layout_height="match_parent"></ListView>
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
 
-        <TextView
-            android:id="@+id/result"
-            android:scrollbars="vertical"
-            android:singleLine="false"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </LinearLayout>
+    </android.support.design.widget.AppBarLayout>
 
+    <include layout="@layout/content_main" />
 
-</LinearLayout>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:srcCompat="@android:drawable/ic_dialog_email" />
+
+</android.support.design.widget.CoordinatorLayout>
